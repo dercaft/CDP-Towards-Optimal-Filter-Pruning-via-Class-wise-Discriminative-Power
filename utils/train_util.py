@@ -35,15 +35,18 @@ def train(net, epochs, lr, train_loader, test_loader, save_info='./', save_acc=8
     :param batch_size: Batch size for training.
     """
     #print('==> Preparing data..')
-    criterion = LabelSmoothCELoss(kargs["label_smoothing"])
-
-    criterion = nn.CrossEntropyLoss()
+    if kargs.__contains__("label_smoothing"):
+        criterion = LabelSmoothCELoss(kargs["label_smoothing"])
+    else:
+        criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4, nesterov=True)
     #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[int(epochs*0.5), int(epochs*0.75)], gamma=0.1)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs, eta_min=0)
-
-    warmup_scheduler = linear_warmup_scheduler(optimizer, kargs["warmup_step"], kargs["warm_lr"], lr)
+    
+    warmup_scheduler =None
+    if kargs.__contains__("warmup_step") and kargs.__contains__("warm_lr"):
+        warmup_scheduler = linear_warmup_scheduler(optimizer, kargs["warmup_step"], kargs["warm_lr"], lr)
   
     best_acc = 0  # best test accuracy
     for epoch in range(start_epoch, epochs):
